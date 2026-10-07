@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Библиотека</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input, select {
+      padding: 10px;
+      font-size: 16px;
+      flex: 1;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background: #333;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>📚 Библиотека</h1>
+
+  <div class="controls">
+    <input
+      type="text"
+      id="search"
+      placeholder="Поиск книги..."
+    >
+
+    <select id="sort">
+      <option value="title_asc">Название A-Z</option>
+      <option value="title_desc">Название Z-A</option>
+      <option value="year_asc">Год ↑</option>
+      <option value="year_desc">Год ↓</option>
+      <option value="author_asc">Автор A-Z</option>
+    </select>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Название</th>
+        <th>Автор</th>
+        <th>Год</th>
+        <th>Жанр</th>
+      </tr>
+    </thead>
+
+    <tbody id="books">
+    </tbody>
+  </table>
+
+  <script>
+    // ВСТАВЬ СЮДА ДАННЫЕ ИЗ SUPABASE
+    const SUPABASE_URL = "https://nvqqtobgelhvhehtohcv.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_RF-dyNDtfjHgSBGL9wRSLw_W8aLROofY";
+
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+    let books = [];
+
+    async function loadBooks() {
+      const { data, error } = await supabaseClient
+        .from("books")
+        .select(`
+          id,
+          title,
+          year,
+          genre,
+          authors (
+            name
+          )
+        `);
+
+      if (error) {
+        console.error(error);
+        document.getElementById("books").innerHTML =
+          `<tr><td colspan="4">Ошибка загрузки данных</td></tr>`;
+        return;
+      }
+
+      books = data;
+      displayBooks();
+    }
+
+    function displayBooks() {
+      const search = document
+        .getElementById("search")
+        .value
+        .toLowerCase();
+
+      const sort = document.getElementById("sort").value;
+
+      let filtered = books.filter(book =>
+        book.title.toLowerCase().includes(search) ||
+        book.authors.name.toLowerCase().includes(search)
+      );
+
+      filtered.sort((a, b) => {
+        if (sort === "title_asc")
+          return a.title.localeCompare(b.title);
+
+        if (sort === "title_desc")
+          return b.title.localeCompare(a.title);
+
+        if (sort === "year_asc")
+          return a.year - b.year;
+
+        if (sort === "year_desc")
+          return b.year - a.year;
+
+        if (sort === "author_asc")
+          return a.authors.name.localeCompare(b.authors.name);
+      });
+
+      document.getElementById("books").innerHTML =
+        filtered.map(book => `
+          <tr>
+            <td>${book.title}</td>
+            <td>${book.authors.name}</td>
+            <td>${book.year}</td>
+            <td>${book.genre}</td>
+          </tr>
+        `).join("");
+    }
+
+    document
+      .getElementById("search")
+      .addEventListener("input", displayBooks);
+
+    document
+      .getElementById("sort")
+      .addEventListener("change", displayBooks);
+
+    loadBooks();
+  </script>
+
+</body>
+</html>
