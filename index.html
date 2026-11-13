@@ -86,9 +86,9 @@
   </table>
 
   <script>
-    // ВСТАВЬ СЮДА ДАННЫЕ ИЗ SUPABASE
-    const SUPABASE_URL = "https://nvqqtobgelhvhehtohcv.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_RF-dyNDtfjHgSBGL9wRSLw_W8aLROofY";
+    // Подставлены ваши актуальные данные Supabase
+    const SUPABASE_URL = "https://csecfwwtkyliffdakjqa.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_vfIwSW5Nf6jpH5MuB7fPrA_o5RJz_BD";
 
     const supabaseClient = window.supabase.createClient(
       SUPABASE_URL,
@@ -131,7 +131,7 @@
 
       let filtered = books.filter(book =>
         book.title.toLowerCase().includes(search) ||
-        book.authors.name.toLowerCase().includes(search)
+        (book.authors && book.authors.name.toLowerCase().includes(search))
       );
 
       filtered.sort((a, b) => {
@@ -147,15 +147,18 @@
         if (sort === "year_desc")
           return b.year - a.year;
 
-        if (sort === "author_asc")
-          return a.authors.name.localeCompare(b.authors.name);
+        if (sort === "author_asc") {
+          const authorA = a.authors ? a.authors.name : "";
+          const authorB = b.authors ? b.authors.name : "";
+          return authorA.localeCompare(authorB);
+        }
       });
 
       document.getElementById("books").innerHTML =
         filtered.map(book => `
           <tr>
             <td>${book.title}</td>
-            <td>${book.authors.name}</td>
+            <td>${book.authors ? book.authors.name : "Не указан"}</td>
             <td>${book.year}</td>
             <td>${book.genre}</td>
           </tr>
